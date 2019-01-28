@@ -121,6 +121,11 @@ public class AddressBook {
     private static final String COMMAND_DELETE_PARAMETER = "INDEX";
     private static final String COMMAND_DELETE_EXAMPLE = COMMAND_DELETE_WORD + " 1";
 
+    private static final String COMMAND_MODIFY_WORD = "modify";
+    private static final String COMMAND_MODIFY_DESC = "modify the name of a contact of a certain index";
+    private static final String COMMAND_MODIFY_PARAMETER = "INDEX";
+    private static final String COMMAND_MODIFY_EXAMPLE = COMMAND_MODIFY_WORD + " 1";
+
     private static final String COMMAND_CLEAR_WORD = "clear";
     private static final String COMMAND_CLEAR_DESC = "Clears address book permanently.";
     private static final String COMMAND_CLEAR_EXAMPLE = COMMAND_CLEAR_WORD;
