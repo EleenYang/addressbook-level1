@@ -71,6 +71,7 @@ public class AddressBook {
     private static final String MESSAGE_COMMAND_HELP_PARAMETERS = "\tParameters: %1$s";
     private static final String MESSAGE_COMMAND_HELP_EXAMPLE = "\tExample: %1$s";
     private static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted Person: %1$s";
+    private static final String MESSAGE_MODIFY_PERSON_SUCCESS = "Modified Person: %1$s, Phone: %2$s";
     private static final String MESSAGE_DISPLAY_PERSON_DATA = "%1$s  Phone Number: %2$s  Email: %3$s";
     private static final String MESSAGE_DISPLAY_LIST_ELEMENT_INDEX = "%1$d. ";
     private static final String MESSAGE_GOODBYE = "Exiting Address Book... Good bye!";
@@ -121,10 +122,11 @@ public class AddressBook {
     private static final String COMMAND_DELETE_PARAMETER = "INDEX";
     private static final String COMMAND_DELETE_EXAMPLE = COMMAND_DELETE_WORD + " 1";
 
-    private static final String COMMAND_MODIFY_WORD = "modify";
-    private static final String COMMAND_MODIFY_DESC = "modify the name of a contact of a certain index";
-    private static final String COMMAND_MODIFY_PARAMETER = "INDEX";
-    private static final String COMMAND_MODIFY_EXAMPLE = COMMAND_MODIFY_WORD + " 1";
+    private static final String COMMAND_MODIFYPHONE_WORD = "modifyphone";
+    private static final String COMMAND_MODIFYPHONE_DESC = "modify the phone number of a contact of a certain index";
+    private static final String COMMAND_MODIFYPHONE_PARAMETER = "INDEX "
+                                                    + PERSON_DATA_PREFIX_PHONE + "PHONE_NUMBER ";
+    private static final String COMMAND_MODIFYPHONE_EXAMPLE = COMMAND_MODIFYPHONE_WORD + " 1 p/98765432";
 
     private static final String COMMAND_CLEAR_WORD = "clear";
     private static final String COMMAND_CLEAR_DESC = "Clears address book permanently.";
@@ -382,6 +384,8 @@ public class AddressBook {
             return executeListAllPersonsInAddressBook();
         case COMMAND_DELETE_WORD:
             return executeDeletePerson(commandArgs);
+        case COMMAND_MODIFYPHONE_WORD:
+            return executeModifyPerson(commandArgs);
         case COMMAND_CLEAR_WORD:
             return executeClearAddressBook();
         case COMMAND_HELP_WORD:
@@ -561,6 +565,83 @@ public class AddressBook {
      */
     private static String getMessageForSuccessfulDelete(String[] deletedPerson) {
         return String.format(MESSAGE_DELETE_PERSON_SUCCESS, getMessageForFormattedPersonData(deletedPerson));
+    }
+
+    /**
+     * Modify a person's number in the address book.
+     * The entire command arguments string is treated as a string representation of the modification.
+     *
+     * @param commandArgs full command args string from the user
+     * @return feedback display message for the operation result
+     */
+    private static String executeModifyPerson(String commandArgs) {
+        if (!isModifyPersonArgsValid(commandArgs)) {
+            return getMessageForInvalidCommandInput(COMMAND_MODIFYPHONE_WORD, getUsageInfoForModifyCommand());
+        }
+
+        final int targetVisibleIndex = extractTargetIndexFromModifyPersonArgs(commandArgs);
+        final String targetPhoneNumber = extractTargetNumberFromModifyPersonArgs(commandArgs);
+        if (!isDisplayIndexValidForLastPersonListingView(targetVisibleIndex)) {
+            return MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
+        }
+
+        modifyPersonFromAddressBook(targetVisibleIndex, targetPhoneNumber);
+        final String[] targetInModel = getPersonByLastVisibleIndex(targetVisibleIndex);
+        return getMessageForSuccessfulModifyPerson(targetInModel);
+    }
+
+    /**
+     * Checks validity of delete person argument string's format.
+     *
+     * @param rawArgs raw command args string for the delete person command
+     * @return whether the input args string is valid
+     */
+    private static boolean isModifyPersonArgsValid(String rawArgs) {
+        try {
+            final String[] argsRead = rawArgs.trim().split("\\s+");
+
+            if (argsRead.length != 2) {
+                return false;
+            }
+
+            final int extractedIndex = Integer.parseInt(argsRead[0]); // use standard libraries to parse
+            return extractedIndex >= DISPLAYED_INDEX_OFFSET;
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+    }
+
+    /**
+     * Extracts the target's index from the raw modify person args string
+     *
+     * @param rawArgs raw command args string for the modify person command
+     * @return extracted index
+     */
+    private static int extractTargetIndexFromModifyPersonArgs(String rawArgs) {
+        final String[] argsRead = rawArgs.trim().split("\\s+");
+        return Integer.parseInt(argsRead[0]);
+    }
+
+    /**
+     * Extracts the target's phone from the raw modify person args string
+     *
+     * @param rawArgs raw command args string for the modify person command
+     * @return extracted index
+     */
+    private static String extractTargetNumberFromModifyPersonArgs(String rawArgs) {
+        final String[] argsRead = rawArgs.trim().split("\\s+");
+        return argsRead[1];
+    }
+
+    /**
+     * Constructs a feedback message for a successful modify phone number command execution.
+     *
+     * @see #executeModifyPerson(String)
+     * @param modifiedPerson index of person who was successfully modified
+     * @return successful modify person feedback message
+     */
+    private static String getMessageForSuccessfulModifyPerson(String[] modifiedPerson) {
+        return String.format(MESSAGE_MODIFY_PERSON_SUCCESS, getMessageForFormattedPersonData(modifiedPerson));
     }
 
     /**
@@ -790,6 +871,14 @@ public class AddressBook {
     private static void addPersonToAddressBook(String[] person) {
         ALL_PERSONS.add(person);
         savePersonsToFile(getAllPersonsInAddressBook(), storageFilePath);
+    }
+
+    private static boolean modifyPersonFromAddressBook(int index, String number){
+        if (index >= ALL_PERSONS.size()) {
+            return false;
+        }
+        ALL_PERSONS.get(index)[1] = number;
+        return true;
     }
 
     /**
@@ -1115,6 +1204,13 @@ public class AddressBook {
         return String.format(MESSAGE_COMMAND_HELP, COMMAND_DELETE_WORD, COMMAND_DELETE_DESC) + LS
                 + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_DELETE_PARAMETER) + LS
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_DELETE_EXAMPLE) + LS;
+    }
+
+    /** Returns the string for showing 'modifyphone' command usage instruction */
+    private static String getUsageInfoForModifyCommand() {
+        return String.format(MESSAGE_COMMAND_HELP, COMMAND_MODIFYPHONE_WORD, COMMAND_MODIFYPHONE_DESC) + LS
+                + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_MODIFYPHONE_PARAMETER) + LS
+                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_MODIFYPHONE_EXAMPLE) + LS;
     }
 
     /** Returns string for showing 'clear' command usage instruction */
