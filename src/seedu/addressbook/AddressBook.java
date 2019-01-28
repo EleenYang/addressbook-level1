@@ -71,7 +71,7 @@ public class AddressBook {
     private static final String MESSAGE_COMMAND_HELP_PARAMETERS = "\tParameters: %1$s";
     private static final String MESSAGE_COMMAND_HELP_EXAMPLE = "\tExample: %1$s";
     private static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted Person: %1$s";
-    private static final String MESSAGE_MODIFY_PERSON_SUCCESS = "Modified Person: %1$s, Phone: %2$s";
+    private static final String MESSAGE_MODIFY_PERSON_SUCCESS = "Modified Person: %1$s";
     private static final String MESSAGE_DISPLAY_PERSON_DATA = "%1$s  Phone Number: %2$s  Email: %3$s";
     private static final String MESSAGE_DISPLAY_LIST_ELEMENT_INDEX = "%1$d. ";
     private static final String MESSAGE_GOODBYE = "Exiting Address Book... Good bye!";
@@ -874,10 +874,10 @@ public class AddressBook {
     }
 
     private static boolean modifyPersonFromAddressBook(int index, String number){
-        if (index >= ALL_PERSONS.size()) {
+        if (index > ALL_PERSONS.size() || index <= 0) {
             return false;
         }
-        ALL_PERSONS.get(index)[1] = number;
+        ALL_PERSONS.get(index - 1)[1] = number;
         return true;
     }
 
